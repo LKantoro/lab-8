@@ -11,8 +11,42 @@ editor: source
 **Part 1:** Locate and examine the `robots.txt` file for this website. Summarize
 what you learn from it.
 
+
+- The only lines on 'https://www.cheese.com/robots.txt' is User-agent: * and Sitemap: https://www.cheese.com/sitemap.xml .
+
+- 'User-agent: *' informs us that anyone is allowed to scrape.
+
+- The lack of Crawl-delay, Visit-time and Request-rate means that we can scrape as often as we want, at any time of day, from as many different users as we want.
+
+- The lack of a 'Disallow" section means that there are no scraping restrictions on specific areas of the cheese website.
+
+
 **Part 2:** Learn about the `html_attr()` function from `rvest`. Describe how
 this function works with a small example.
+
+
+```{r}
+library(rvest)
+```
+
+- The html_attr() function obtains the value of an attribute. It is frequently used after html_elements on a website. 
+
+- Below, html_elements("a") extracts all elements inside the <a> attribute. html_attr("href") extracts the value of href inside the <a> element. In this case the href is the link to the wikipedia article on cats.
+
+- Example below can be found [here](https://cran.r-project.org/web/packages/rvest/vignettes/rvest.html).
+
+
+```{r}
+html <- minimal_html("
+  <p><a href='https://en.wikipedia.org/wiki/Cat'>cats</a></p>
+  <img src='https://cataas.com/cat' width='100' height='200'>
+")
+
+html %>% 
+  html_elements("a") %>% 
+  html_attr("href")
+```
+
 
 **Part 3:** (Do this alongside Part 4 below.) I 
 used [ChatGPT](https://chat.openai.com/chat) to start the process of scraping
@@ -26,7 +60,7 @@ make about where ChatGPT is useful / not useful.
 
 ```{r}
 #| eval: false
-#| label: small-example-of-getting-cheese-info
+#| label: small-example-of-getting-cheese-info_unedited
 
 # Load required libraries
 library(rvest)
@@ -57,6 +91,61 @@ cheese_df <- data.frame(Name = cheese_names,
 # Print the data frame
 print(cheese_df)
 ```
+
+- The url found the list of cheeses on the website and read it in using read_html, which is a good start.
+
+- Everything in the code chunk below works well.
+
+```{r}
+#| eval: false
+
+
+# Load required libraries
+library(rvest)
+library(dplyr)
+
+# Define the URL
+url <- "https://www.cheese.com/alphabetical"
+
+# Read the HTML content from the webpage
+webpage <- read_html(url)
+```
+
+- ChatGPT's errors begin in the code chunk below
+
+- cheese_data is attempting to check all cheese items and extract their urls. However, the html_nodes(".cheese-item") is not correctly finding all cheeses, which makes the rest of the function produce only "https://cheese.com" without specific cheeses appended at the end of the url.
+
+- Running ' webpage %>% html_nodes(".cheese-item")' produces a warning saying it could not find the child attributes.
+
+- cheese_names is supposed to be the extracting names of the cheese from each url. Since cheese_data is not a list of cheese url's like it is supposed to be, cheese_names does not contain a list of cheese names.
+
+- The cheese_df object fails because cheese_data contiains one url, and cheese_names is empty since it didn't find any cheeses.
+
+```{r}
+# Extract the cheese names and URLs
+cheese_data <- webpage %>%
+  html_nodes(".cheese-item") %>%
+  html_nodes("a") %>%
+  html_attr("href") %>%
+  paste0("https://cheese.com", .)
+
+cheese_names <- webpage %>%
+  html_nodes(".cheese-item h3") %>%
+  html_text()
+
+# Create a data frame to store the results
+cheese_df <- data.frame(Name = cheese_names,
+                        URL = cheese_data,
+                        stringsAsFactors = FALSE)
+
+# Print the data frame
+print(cheese_df)
+```
+
+
+
+
+
 
 **Part 4:** Obtain the following information for **all** cheeses in the
 database:
