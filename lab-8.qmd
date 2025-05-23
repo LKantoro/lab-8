@@ -287,8 +287,6 @@ get_cheese_info = function(cheese){
   #mutate replaces "" with NA values
   
   return(df)
-  
-  
 }
 ```
 
