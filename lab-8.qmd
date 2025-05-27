@@ -98,7 +98,6 @@ url <- "https://www.cheese.com/alphabetical"
 webpage <- read_html(url)
 ```
 
--   ChatGPT's errors begin in the code chunk below
 
 -   cheese_data is attempting to check all cheese items and extract their urls. However, the html_nodes(".cheese-item") is not correctly finding all cheeses, which makes the rest of the function produce only "https://cheese.com" without specific cheeses appended at the end of the url.
 
@@ -109,6 +108,8 @@ webpage <- read_html(url)
 -   The cheese_df object fails because cheese_data contiains one url, and cheese_names is empty since it didn't find any cheeses.
 
 ```{r}
+#| eval: false
+
 # Extract the cheese names and URLs
 cheese_data <- webpage %>%
   html_nodes(".cheese-item") %>%
@@ -128,6 +129,7 @@ cheese_df <- data.frame(Name = cheese_names,
 # Print the data frame
 print(cheese_df)
 ```
+
 
 **Part 4:** Obtain the following information for **all** cheeses in the database:
 
@@ -191,6 +193,12 @@ df <-scrape_cheese(15)
 
 ```
 
+
+**Part 5:** When you go to a particular cheese's page (like 
+[gouda](https://www.cheese.com/gouda/)), you'll see more detailed information
+about the cheese. For [**just 10**]{.underline} of the cheeses in the database,
+obtain the following detailed information:
+=======
 **Part 5:** When you go to a particular cheese's page (like [gouda](https://www.cheese.com/gouda/)), you'll see more detailed information about the cheese. For [**just 10**]{.underline} of the cheeses in the database, obtain the following detailed information:
 
 -   milk information
@@ -201,4 +209,89 @@ df <-scrape_cheese(15)
 
 (Just 10 to avoid overtaxing the website! Continue adding a 1 second pause between page queries.)
 
+```{r}
+library(stringr)
+library(dplyr)
+library(tidyverse)
+```
+
+
+```{r}
+#| label: cheese_info_function
+
+get_cheese_info = function(cheese){
+  #waiting one second between API calls
+  Sys.sleep(1)
+  
+  #taking provided url and reading in it's html elements
+  url = cheese
+  webpage = read_html(url)
+  
+  #extracting name of cheese
+  name = webpage %>% html_elements("h1") %>% html_text2()
+  
+  #extracting href from milk element
+  milk = webpage %>% html_elements(".summary_milk p") %>% html_elements('a') %>% 
+  html_attr("href") %>% str_split_i("/by_milk/", 2) %>% str_remove("/")
+  
+  #extracting href from country element
+  country = webpage %>% html_elements(".summary_country p") %>% html_elements('a') %>% 
+  html_attr("href") %>% str_split_i("/by_country/", 2) %>% str_remove("/")
+  
+  #extracting desired text element from family element
+  #family typically doesn't have an href
+  family = webpage %>% html_elements(".summary_family p") %>% html_text2() %>% 
+  str_split_i("Family: ", 2)
+  
+  #extracting href from type element
+  type = webpage %>% html_elements(".summary_moisture_and_type p") %>% html_elements('a') %>%
+  html_attr("href") %>% str_split_i("/by_type/", 2) %>% str_remove("/")
+  
+  #extracting desired text element from flavour element
+  #flavour typically doesn't have an href
+  flavour = webpage %>% html_elements(".summary_taste p") %>% html_text2() %>%
+  str_split_i("Flavour: ", 2) %>% str_remove("/")
+  
+  
+  #combining 6 extracted elements into a data frame.
+  #paste0(x, collapse=",") puts cheeses with multiple of one response (eg. milk)
+  #into one cell
+  df = data.frame(name = paste0(name, collapse = ", "), 
+                    milk = paste0(milk, collapse = ", "), 
+                    country = paste0(country, collapse = ", "), 
+                    family = paste0(family, collapse = ", "), 
+                    type = paste0(type, collapse = ", "), 
+                    flavour = paste0(flavour, collapse = ", ")) %>% 
+  mutate(across(c(name, milk, country, family, type, flavour), na_if, ""))
+  #mutate replaces "" with NA values
+  
+  return(df)
+}
+```
+
+```{r}
+#| label: 10_cheeses_test
+
+#list of 10 cheeses to extract attributes
+cheese_list = c("https://www.cheese.com/gouda/", 
+                "https://www.cheese.com/colby-jack/",
+                "https://www.cheese.com/swiss/",
+                "https://www.cheese.com/cheddar/",
+                "https://www.cheese.com/tetilla/",
+                "https://www.cheese.com/aura/",
+                "https://www.cheese.com/butterkase/",
+                "https://www.cheese.com/vasterbottenost/",
+                "https://www.cheese.com/muenster/",
+                "https://www.cheese.com/adelost/")
+
+
+#using map to call the above function on each cheese in the list
+#bind_rows combines all 10 returned data into one 10 row data frame
+cheese_info = bind_rows(map(cheese_list, get_cheese_info))
+
+```
+
+
+
 **Part 6:** Evaluate the code that you wrote in terms of **efficiency**. To what extent do your function(s) adhere to the **principles for writing good functions**? To what extent are your **functions efficient**? To what extent is your **iteration of these functions efficient**?
+
