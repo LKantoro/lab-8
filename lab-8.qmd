@@ -138,6 +138,7 @@ print(cheese_df)
 To be kind to the website owners, please add a 1 second pause between page queries. (Note that you can view 100 cheeses at a time.)
 
 ```{r}
+library(rvest)
 library(stringr)
 
 scrape_cheese <- function(total_pages) {
@@ -145,6 +146,7 @@ scrape_cheese <- function(total_pages) {
   cheese_data <- c()
   cheese_names <- c()
   cheese_img <- c()
+  all_urls <- c()
   
   for (i in 1:total_pages) {
     
@@ -157,6 +159,7 @@ scrape_cheese <- function(total_pages) {
       html_attr("href") 
     
     url <- paste0("https://cheese.com", data)
+    all_urls <- c(all_urls, url)
     
     names <- webpage |>
       html_nodes("h3 a") |>
@@ -168,15 +171,15 @@ scrape_cheese <- function(total_pages) {
     
     missing_img <- !str_detect(img, "image-missing")
     
-    cheese_data <- c(cheese_data, data[1:100])
-    cheese_names <- c(cheese_names, names[1:100])
-    cheese_img <- c(cheese_img, missing_img[1:100])
+    cheese_data <- c(cheese_data, data)
+    cheese_names <- c(cheese_names, names)
+    cheese_img <- c(cheese_img, missing_img)
       
   }
   
   cheese_df <- data.frame(
     Name = cheese_names,
-    URL = url,
+    URL = all_urls,
     Has_Picture = cheese_img,
     stringsAsFactors = FALSE
   )
@@ -187,7 +190,7 @@ scrape_cheese <- function(total_pages) {
   
 }
 
-df <-scrape_cheese(15)
+df <-scrape_cheese(5)
 
 ```
 
