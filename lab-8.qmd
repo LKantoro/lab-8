@@ -25,6 +25,8 @@ this function works with a small example.
 
 ```{r}
 library(rvest)
+library(tidyverse)
+library(purrr)
 ```
 
 - The html_attr() function obtains the value of an attribute. It is frequently used after html_elements on a website. 
@@ -104,17 +106,36 @@ queries. (Note that you can view 100 cheeses at a time.)
 
 ```{r}
 
+url <- "https://www.cheese.com/alphabetical"
 
-url <- "https://www.cheese.com/gouda"
+extract_cheese_data <- function(url) {
+  Sys.sleep(1)  
+  page <- read_html(url)
 
-webpage <- read_html(url)
+cheese_names <- page %>%
+    html_elements("h3 a") %>%
+    html_text()
+
+cheese_urls <- page %>%
+  html_elements("h3 a") %>%
+  html_attr("href") %>%
+  paste0("https://www.cheese.com", .)
+
+cheese_images <- page %>% 
+  html_nodes(".product-item img") %>% 
+  html_attr("class") %>%
+  (\(x) x == "image-exists")()
+
+tibble(
+    name = cheese_names,
+    url = cheese_urls,
+    image = cheese_images)
+}
 
 
-webpage |>
-  html_elements("h1") |>
-  html_attr("") |>
-  paste0("https://cheese.com", .)
+extract_cheese_data(url)
 
+cheese_df <- map_dfr(url, extract_cheese_data)
 
 
 ```
@@ -138,3 +159,4 @@ between page queries.)
 what extent do your function(s) adhere to the **principles for writing good functions**?
 To what extent are your **functions efficient**? To what extent is your 
 **iteration of these functions efficient**? 
+
