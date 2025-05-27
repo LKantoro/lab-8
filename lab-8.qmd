@@ -160,3 +160,19 @@ what extent do your function(s) adhere to the **principles for writing good func
 To what extent are your **functions efficient**? To what extent is your 
 **iteration of these functions efficient**? 
 
+
+Efficiency: 
+To increase efficiency in our scrape_cheese function we initiated vectors to hold the elements of our final data set. We knew we would need these eventually so allocating vectors to them vectorizes our function. We also used function like across() in our get_cheese_info function to avoid writing a more complex function and ensuring that we get the same result each time the function runs. 
+
+Limitations in Iteration:
+We did use a for loop in our scrape_cheese function to iterate through pages on the cheese website. For loops are not optimally efficient in R so reformatting the code to use a map function or apply function could further increase our efficiency. 
+
+Principles of Writing Good Functions: 
+We used the data.frame function in both functions that we wrote to ensure that output is of the same form each time the function runs. We also gave each element in our functions practical yet descriptive names that should tell anyone familiar with R what is happening in the body of our code and what the end goal should contain. Our functions are also self contained not relying on any information from outside the function. 
+
+
+
+
+
+
+
